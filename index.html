@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MindBeat · Central de Telemedicina · versão folheto</title>
+<style>
+/* ---------------------------------------------------------------------------
+   MindBeat · apresentação para central de telemedicina
+
+   Sistema visual herdado da skill cardioline-slides: tokens de cor auditados
+   por contraste, Inter variável, e a stage fixa de 1600x900 escalada por
+   transform (overflow vira impossível por construção).
+   Nenhum hex literal deve existir fora do bloco :root.
+--------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Inter";
+  src: url("assets/fonts/Inter-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Marca */
+  --cl-orange: #f66201;        /* grafismo: réguas, pontos, traçados */
+  --cl-orange-strong: #ca5001; /* superfície preenchida com texto branco */
+  --cl-orange-ink: #b84a01;    /* laranja como TEXTO sobre fundo claro */
+  --cl-orange-ui: #ee5b00;     /* só em display >= 32px */
+  --cl-orange-light: #ff9d4d;  /* só no gradiente da borda da linha urgente */
+  --ang: 0deg;                 /* partida do gradiente; ver @property adiante */
+  --cl-ink: #071046;
+  --cl-ink-deep: #040a2a;
+  --cl-tint: #fdebe0;
+  --cl-paper: #fafaf9;
+  --cl-line: #e6e6e6;
+  --cl-mute: #6e6e6e;
+  --cl-white: #ffffff;
+
+  /* Stage */
+  --stage-w: 1600px;
+  --stage-h: 900px;
+
+  /* Tipografia */
+  --cl-font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cl-fs-hero: 128px;
+  --cl-fs-display: 96px;
+  --cl-fs-headline: 72px;
+  --cl-fs-subhead: 56px;
+  --cl-fs-lede: 32px;
+  --cl-fs-body: 22px;
+  --cl-fs-caption: 16px;
+  --cl-fs-kicker: 16px;
+  --cl-tracking-hero: -0.035em;
+  --cl-tracking-display: -0.032em;
+  --cl-tracking-headline: -0.028em;
+  --cl-tracking-subhead: -0.022em;
+  --cl-tracking-kicker: 0.18em;
+  --cl-lh-tight: 1.04;
+  --cl-lh-snug: 1.16;
+  --cl-lh-normal: 1.5;
+
+  /* Espaço */
+  --cl-gutter: 120px;
+  --cl-space-1: 8px;
+  --cl-space-2: 16px;
+  --cl-space-3: 24px;
+  --cl-space-4: 40px;
+  --cl-space-5: 64px;
+  --cl-space-6: 96px;
+
+  /* Forma e movimento */
+  --cl-radius-chip: 10px;
+  --cl-radius-node: 14px;
+  --cl-radius-frame: 20px;
+  --cl-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--cl-font);
+  font-size: var(--cl-fs-body);
+  line-height: var(--cl-lh-normal);
+  background: var(--cl-ink-deep);
+  color: var(--cl-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p, figure, blockquote { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+svg { display: block; }
+
+/* ---- Deck ---------------------------------------------------------------- */
+
+.deck {
+  /* A escala da stage vem do script, não de tan(atan2()) em CSS.
+     Medido no Safari: aquela expressão devolve valor negativo, e um
+     scale() negativo espelha o slide inteiro, de cabeça para baixo.
+     O valor inicial 1 vale só até o script rodar, no fim do body. */
+  --stage-scale: 1;
+  height: 100vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+.deck::-webkit-scrollbar { display: none; }
+
+.slide {
+  height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.slide[data-theme="white"] { background: var(--cl-white); color: var(--cl-ink); }
+.slide[data-theme="paper"] { background: var(--cl-paper); color: var(--cl-ink); }
+.slide[data-theme="ink"]   { background: var(--cl-ink-deep); color: var(--cl-white); }
+
+.stage {
+  position: relative;
+  flex: none;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  transform: scale(var(--stage-scale, 1));
+  transform-origin: center center;
+}
+
+.pad {
+  position: absolute;
+  inset: 0;
+  padding: var(--cl-space-6) var(--cl-gutter);
+  display: flex;
+  flex-direction: column;
+}
+.pad.tight { padding: var(--cl-space-5) var(--cl-gutter); }
+.pad.center { justify-content: center; }
+
+/* ---- Tipografia ---------------------------------------------------------- */
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--cl-fs-kicker);
+  font-weight: 600;
+  letter-spacing: var(--cl-tracking-kicker);
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--cl-mute);
+}
+[data-theme="ink"] .kicker { color: rgb(255 255 255 / 0.72); }
+.kicker::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  background: var(--cl-orange);
+  flex: none;
+}
+.kicker.bare::before { display: none; }
+
+.display { font-weight: 600; line-height: var(--cl-lh-tight); text-wrap: balance; }
+.hero     { font-size: var(--cl-fs-hero);     letter-spacing: var(--cl-tracking-hero); }
+.big      { font-size: var(--cl-fs-display);  letter-spacing: var(--cl-tracking-display); }
+.headline { font-size: var(--cl-fs-headline); letter-spacing: var(--cl-tracking-headline); }
+.subhead  { font-size: var(--cl-fs-subhead);  letter-spacing: var(--cl-tracking-subhead); line-height: var(--cl-lh-snug); }
+
+/* Laranja em texto só a partir de 32px. Abaixo disso ele reprova AA. */
+.accent { color: var(--cl-orange-ui); }
+[data-theme="ink"] .accent { color: var(--cl-orange); }
+
+.lede { font-size: var(--cl-fs-lede); line-height: var(--cl-lh-snug); letter-spacing: -0.01em; max-width: 34ch; text-wrap: pretty; }
+.body { font-size: var(--cl-fs-body); line-height: var(--cl-lh-normal); max-width: 52ch; text-wrap: pretty; }
+.caption { font-size: var(--cl-fs-caption); line-height: 1.4; color: var(--cl-mute); }
+[data-theme="ink"] .caption { color: rgb(255 255 255 / 0.52); }
+.mute { color: var(--cl-mute); }
+[data-theme="ink"] .mute { color: rgb(255 255 255 / 0.62); }
+
+.rule { height: 1px; width: 100%; background: var(--cl-line); border: 0; }
+[data-theme="ink"] .rule { background: rgb(255 255 255 / 0.18); }
+.rule.orange { background: var(--cl-orange); height: 2px; }
+
+/* ---- Composição ---------------------------------------------------------- */
+
+.grow { flex: 1 1 auto; }
+.stack { display: flex; flex-direction: column; }
+.gap-1 { gap: var(--cl-space-1); }
+.gap-2 { gap: var(--cl-space-2); }
+.gap-3 { gap: var(--cl-space-3); }
+.gap-4 { gap: var(--cl-space-4); }
+.gap-5 { gap: var(--cl-space-5); }
+
+.cols { display: grid; gap: var(--cl-space-5); align-items: start; }
+/* Grade que divide a altura sobrante com as irmãs, para o slide não terminar
+   com um terço vazio embaixo. */
+.cols.fill { flex: 1 1 0; align-items: stretch; }
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.cols-5 { grid-template-columns: repeat(5, 1fr); }
+.cols-bias { grid-template-columns: 1.05fr 0.95fr; }
+.cols-bias-r { grid-template-columns: 0.85fr 1.15fr; }
+
+.list { display: flex; flex-direction: column; gap: var(--cl-space-3); }
+/* O marcador é absoluto, e não uma coluna de grid: como grid item ele
+   quebraria qualquer <strong> ou <span> no meio da frase em colunas próprias. */
+.list li {
+  position: relative;
+  padding-left: 34px;
+  font-size: var(--cl-fs-body);
+  line-height: var(--cl-lh-normal);
+  max-width: 56ch;
+}
+.list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--cl-orange);
+}
+
+.card {
+  border: 1px solid var(--cl-line);
+  border-radius: var(--cl-radius-frame);
+  padding: var(--cl-space-3) var(--cl-space-3) var(--cl-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cl-space-2);
+  background: var(--cl-white);
+}
+[data-theme="paper"] .card { background: var(--cl-white); }
+[data-theme="ink"] .card { background: rgb(255 255 255 / 0.04); border-color: rgb(255 255 255 / 0.14); }
+.card .cap { font-size: var(--cl-fs-caption); letter-spacing: 0.14em; text-transform: uppercase; color: var(--cl-mute); font-weight: 600; }
+.card h3 { font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; font-weight: 600; }
+.card p { font-size: 19px; line-height: 1.45; color: var(--cl-mute); }
+[data-theme="ink"] .card p { color: rgb(255 255 255 / 0.62); }
+.card .top-rule { height: 2px; width: 40px; background: var(--cl-orange); }
+
+.quote {
+  font-size: 30px;
+  line-height: 1.24;
+  letter-spacing: -0.012em;
+  font-weight: 500;
+  max-width: 64ch;
+  text-wrap: pretty;
+}
+
+.tint {
+  background: var(--cl-tint);
+  border-radius: var(--cl-radius-frame);
+  padding: var(--cl-space-3) var(--cl-space-4);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--cl-line);
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 17px;
+  font-weight: 500;
+  width: max-content;
+}
+[data-theme="ink"] .chip { border-color: rgb(255 255 255 / 0.2); }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cl-orange); }
+
+.bignum {
+  font-size: 132px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Peças específicas --------------------------------------------------- */
+
+/* ---- Imagens -------------------------------------------------------------
+   Todas são decorativas (alt vazio) e entram atrás do .pad, que já é absoluto
+   e cobre a stage inteira. O scrim existe para o texto não depender do que a
+   foto tem embaixo dele. */
+
+.bleed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    var(--cl-ink-deep) 20%,
+    rgb(4 10 42 / 0.82) 46%,
+    rgb(4 10 42 / 0.28) 100%
+  );
+}
+
+/* Para imagens cujo assunto está embaixo, como o horizonte do fechamento. */
+.scrim.up {
+  background: linear-gradient(
+    180deg,
+    var(--cl-ink-deep) 8%,
+    rgb(4 10 42 / 0.74) 44%,
+    rgb(4 10 42 / 0.30) 100%
+  );
+}
+
+/* Cartão com foto de fundo e o texto no rodapé. */
+.photo-card {
+  position: relative;
+  border-radius: var(--cl-radius-frame);
+  overflow: hidden;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.photo-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-card .copy {
+  position: relative;
+  padding: var(--cl-space-4) var(--cl-space-3) var(--cl-space-3);
+  background: linear-gradient(180deg, rgb(4 10 42 / 0) 0%, rgb(4 10 42 / 0.86) 42%, rgb(4 10 42 / 0.96) 100%);
+  color: var(--cl-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.photo-card .copy h3 { font-size: 30px; line-height: 1.15; letter-spacing: -0.018em; font-weight: 600; }
+.photo-card .copy p { font-size: 20px; line-height: 1.45; color: rgb(255 255 255 / 0.78); }
+
+/* Faixa larga com foto à direita e a frase sobre a área escura à esquerda. */
+.photo-band {
+  position: relative;
+  height: 260px;
+  border-radius: var(--cl-radius-frame);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.photo-band img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 78% center;
+}
+.photo-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--cl-ink-deep) 14%, rgb(4 10 42 / 0.80) 48%, rgb(4 10 42 / 0.10) 100%);
+}
+.photo-band .quote {
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--cl-space-5);
+  max-width: 56ch;
+  color: var(--cl-white);
+}
+
+/* Gráfico do slide 2. Cor por classe, para nenhum hex escapar do :root. */
+.chart { width: 100%; height: auto; }
+.chart text { font-family: var(--cl-font); }
+.chart .axis { stroke: var(--cl-line); stroke-width: 1; }
+.chart .grid { stroke: var(--cl-line); stroke-width: 1; stroke-dasharray: 2 8; }
+.chart .curve { fill: none; stroke: var(--cl-orange); stroke-width: 4; stroke-linecap: round; }
+.chart .flat { fill: none; stroke: var(--cl-mute); stroke-width: 2; stroke-dasharray: 7 7; stroke-linecap: round; opacity: 0.6; }
+.chart .dot { fill: var(--cl-orange); }
+.chart .halo { fill: var(--cl-orange); opacity: 0.16; }
+.chart .lbl { fill: var(--cl-orange-ink); font-size: 17px; font-weight: 600; }
+.chart .lbl-mute { fill: var(--cl-mute); font-size: 16px; }
+.chart .cap { fill: var(--cl-mute); font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+.chart .stop-a { stop-color: var(--cl-orange); stop-opacity: 0.2; }
+.chart .stop-b { stop-color: var(--cl-orange); stop-opacity: 0; }
+
+/* Pipeline do slide 3 */
+.pipeline { display: flex; align-items: stretch; gap: var(--cl-space-2); }
+.pipeline .step {
+  flex: 1 1 0;
+  border: 1px solid var(--cl-line);
+  border-radius: var(--cl-radius-node);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pipeline .step .n { font-size: 13px; letter-spacing: 0.14em; color: var(--cl-orange-ink); font-weight: 700; }
+.pipeline .step .t { font-size: 19px; line-height: 1.25; font-weight: 500; }
+.pipeline .arrow { align-self: center; width: 22px; height: 2px; background: var(--cl-orange); position: relative; flex: none; }
+.pipeline .arrow::after {
+  content: "";
+  position: absolute;
+  right: -1px; top: 50%;
+  transform: translateY(-50%);
+  border-left: 8px solid var(--cl-orange);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+
+/* Grade de 10 exames do slide 4 */
+.tenup { display: grid; grid-template-columns: repeat(5, 76px); gap: 14px; }
+.tenup i { display: block; height: 76px; border-radius: var(--cl-radius-chip); background: rgb(255 255 255 / 0.12); }
+.tenup i.on { background: var(--cl-orange); }
+
+/* Fila do slide 5 */
+.queue { display: flex; flex-direction: column; gap: 10px; }
+.queue .row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--cl-line);
+  border-radius: var(--cl-radius-chip);
+  padding: 13px 16px;
+  font-size: 18px;
+  background: var(--cl-white);
+}
+.queue .row .sev { width: 10px; height: 10px; border-radius: 50%; background: var(--cl-line); }
+.queue .row .sev.high { background: var(--cl-orange); }
+.queue .row .sev.mid { background: var(--cl-tint); border: 1px solid var(--cl-orange); }
+.queue .row .tag { font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cl-mute); font-weight: 600; }
+.queue .row.pull { border-color: var(--cl-orange); }
+
+/* Calculadora do slide 9 */
+.calc {
+  /* Sombra difusa em vez de contorno: o campo se destaca por profundidade, sem
+     a moldura tracejada disputando com o laranja dos números. */
+  border: 0;
+  border-radius: var(--cl-radius-frame);
+  padding: var(--cl-space-3) var(--cl-space-4);
+  background: var(--cl-white);
+  box-shadow:
+    0 2px 6px rgb(7 16 70 / 0.05),
+    0 12px 28px rgb(7 16 70 / 0.07),
+    0 40px 80px rgb(7 16 70 / 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cl-space-2);
+}
+.calc .field { display: grid; grid-template-columns: 1fr 200px; align-items: center; gap: var(--cl-space-3); }
+.calc label { font-size: 18px; color: var(--cl-mute); }
+.calc input {
+  font: inherit;
+  font-size: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  width: 100%;
+  padding: 8px 12px;
+  color: var(--cl-ink);
+  background: var(--cl-tint);
+  border: 0;
+  border-bottom: 2px solid var(--cl-orange);
+  border-radius: 8px 8px 0 0;
+}
+.calc input:focus { outline: 2px solid var(--cl-orange-strong); outline-offset: 2px; }
+.calc .out { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--cl-space-2); }
+.calc .out div { display: flex; flex-direction: column; gap: 4px; }
+.calc .out .v { font-size: 36px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--cl-orange-ink); }
+/* Duas linhas reservadas para o rótulo: um deles quebra, e sem isso os três
+   números deixariam de compartilhar a mesma linha de base. */
+.calc .out .k { font-size: 15px; line-height: 1.3; min-height: 2.6em; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cl-mute); font-weight: 600; }
+
+/* Assinatura sob o wordmark da capa. */
+.signature {
+  margin-top: 20px;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: rgb(255 255 255 / 0.62);
+}
+
+/* Cada número da calculadora tem duas entradas para a mesma variável: o campo,
+   para quem já sabe o valor, e o slider, para varrer cenários ao vivo na
+   reunião sem tirar os olhos do resultado. O trilho preenchido é pintado por
+   --pct, que o script atualiza. */
+.calc .slider {
+  -webkit-appearance: none;
+  appearance: none;
+  /* Zera o que .calc input impõe aos campos de texto: sem isso o range herda
+     o filete laranja embaixo e a caixa de tint, e o trilho ganha uma segunda
+     linha que não é dele. */
+  border: 0;
+  padding: 0;
+  width: 100%;
+  height: 4px;
+  margin: -8px 0 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--cl-orange) calc(var(--pct, 0) * 1%),
+    var(--cl-line) calc(var(--pct, 0) * 1%)
+  );
+  cursor: pointer;
+}
+.calc .slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cl-orange);
+  border: 0;
+  box-shadow: 0 1px 4px rgb(7 16 70 / 0.2);
+}
+.calc .slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cl-orange);
+  border: 0;
+}
+.calc .slider:focus-visible { outline: 2px solid var(--cl-orange-strong); outline-offset: 4px; }
+
+/* Logo da Cardios na capa, no canto oposto ao da Cardioline. A proporção é
+   quase quadrada, então ela não pode dividir a linha com o wordmark da
+   Cardioline sem uma delas ficar minúscula. */
+.selo-cardios {
+  position: absolute;
+  top: 40px;
+  right: var(--cl-gutter);
+  width: 116px;
+  z-index: 2;
+}
+
+/* O mesmo selo em todas as páginas. O logo da Cardios já traz "a Cardioline
+   company" embaixo, então ele sozinho assina as duas casas e dispensa um
+   segundo wordmark no canto. */
+.selo-cardios.pg { width: 84px; top: 44px; }
+
+/* Campo editável ao vivo na capa */
+.editable {
+  border-bottom: 2px solid var(--cl-orange);
+  padding: 0 6px 2px;
+  min-width: 320px;
+  display: inline-block;
+}
+/* Na capa o campo não leva filete: ali ele é o nome do cliente, não um
+   formulário. O realce no foco continua sinalizando que dá para editar. */
+.editable.plain { border-bottom: 0; padding-left: 0; }
+.editable:focus { outline: none; background: rgb(246 98 1 / 0.16); }
+
+/* Numeração dos passos do slide 11 */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--cl-space-4); }
+.steps .s { display: flex; flex-direction: column; gap: var(--cl-space-2); }
+.steps .s .n { font-size: 15px; letter-spacing: 0.16em; font-weight: 700; color: var(--cl-orange); }
+.steps .s h3 { font-size: 30px; line-height: 1.18; letter-spacing: -0.018em; font-weight: 600; }
+.steps .s p { font-size: 19px; line-height: 1.45; }
+
+/* ---- Entrada dos slides ----------------------------------------------------
+   Cada elemento com data-reveal entra sozinho, na ordem que --d define. O
+   gatilho é a classe .on no slide ativo, então a entrada se repete toda vez
+   que se volta ao slide: numa reunião a mesma passagem é mostrada mais de uma
+   vez, e precisa funcionar igual na segunda. Só opacity e transform. */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 680ms var(--cl-ease),
+    transform 680ms var(--cl-ease);
+  transition-delay: calc(var(--d, 0) * 130ms);
+}
+.slide.on [data-reveal] { opacity: 1; transform: none; }
+
+/* Logo da capa: entra sem deslocamento, só aparecendo. */
+.marca { width: 240px; height: auto; }
+.marca[data-reveal] { transform: none; }
+
+/* ---- Traçado do gráfico do slide 2 ----------------------------------------
+   pathLength="1" normaliza o comprimento do path, então o desenho não depende
+   de medir a curva em JS. */
+
+.chart .curve-main {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1700ms var(--cl-ease) 420ms;
+}
+.slide.on .chart .curve-main { stroke-dashoffset: 0; }
+
+.chart .area,
+.chart .flat,
+.chart .legenda,
+.chart .ponto {
+  opacity: 0;
+  transition: opacity 620ms var(--cl-ease);
+}
+.slide.on .chart .area { opacity: 1; transition-delay: 900ms; }
+.slide.on .chart .ponto { opacity: 1; transition-delay: 1900ms; }
+.slide.on .chart .flat { opacity: 1; transition-delay: 2150ms; }
+.slide.on .chart .legenda { opacity: 1; transition-delay: 2350ms; }
+
+/* ---- Fila do slide 5 -------------------------------------------------------
+   As linhas são posicionadas por slot em vez de empilhadas no fluxo: assim
+   reordenar é uma mudança de translateY, que anima. Com `order` de flex a
+   troca seria instantânea. As fases f1, f2 e f3 entram por tempo, no script. */
+
+/* O @property registra o ângulo para ele poder ser animado. Onde o registro
+   não existe, o --ang de :root ainda dá um valor válido ao conic-gradient:
+   sem ele o gradiente seria inválido, e com ele cai a declaração inteira de
+   background, deixando a linha urgente sem fundo. */
+@property --ang {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.queue.fila { position: relative; height: 362px; }
+
+.queue.fila .row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 52px;
+  padding: 0 16px;
+  border-width: 2px;
+  opacity: 0;
+  transform: translateY(calc(var(--de) * 62px));
+  transition:
+    opacity 420ms var(--cl-ease),
+    transform 820ms var(--cl-ease);
+}
+.queue.fila.f1 .row { opacity: 1; transition-delay: calc(var(--i) * 140ms), 0ms; }
+.queue.fila.f2 .row { transform: translateY(calc(var(--para) * 62px)); }
+
+.queue.fila .row .tag { opacity: 0; transition: opacity 420ms var(--cl-ease); }
+.queue.fila.f3 .row .tag { opacity: 1; }
+
+.queue.fila.f3 .row.atencao { border-color: var(--cl-orange); }
+
+/* A borda em gradiente vive nos dois backgrounds da própria linha. Um pseudo
+   com z-index negativo ficaria por cima dela, porque o translateY faz de cada
+   linha um contexto de empilhamento. */
+.queue.fila.f3 .row.urgente {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--cl-white), var(--cl-white)) padding-box,
+    conic-gradient(
+      from var(--ang),
+      var(--cl-orange),
+      var(--cl-orange-light),
+      var(--cl-orange-strong),
+      var(--cl-orange)
+    ) border-box;
+  animation: girar 3.4s linear infinite, pulsar 2.6s var(--cl-ease) infinite;
+}
+
+@keyframes girar { to { --ang: 360deg; } }
+@keyframes pulsar {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(246 98 1 / 0.24); }
+  50% { box-shadow: 0 0 0 10px rgb(246 98 1 / 0); }
+}
+
+/* Rótulo da coluna da direita: troca quando a IA termina de priorizar. */
+.estado { position: relative; display: block; height: 20px; }
+.estado > span { position: absolute; inset: 0; transition: opacity 420ms var(--cl-ease); }
+.estado .pronto { opacity: 0; }
+.f2 .estado .analisando { opacity: 0; }
+.f2 .estado .pronto { opacity: 1; }
+
+.bolinha {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cl-orange);
+  margin-right: 9px;
+  animation: piscar 1.1s var(--cl-ease) infinite;
+}
+@keyframes piscar { 50% { opacity: 0.22; } }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  .chart .area,
+  .chart .flat,
+  .chart .legenda,
+  .chart .ponto,
+  .queue.fila .row,
+  .queue.fila .row .tag {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .chart .curve-main { stroke-dashoffset: 0; transition: none; }
+  .queue.fila .row { transform: translateY(calc(var(--para) * 62px)); }
+  .queue.fila .row.urgente { animation: none; }
+  .bolinha { animation: none; }
+}
+
+/* ---- Contadores ------------------------------------------------------------
+   Números que sobem de zero até o valor. O texto é escrito pelo script, então
+   o markup guarda o alvo em data-conta e o formato em data-dec/pre/pos. */
+[data-conta] { font-variant-numeric: tabular-nums; }
+
+/* Quadradinhos do slide 4: acendem um a um, conduzidos pelo script. */
+.tenup i {
+  transition:
+    background-color 420ms var(--cl-ease),
+    transform 420ms var(--cl-ease);
+}
+.tenup i.on { transform: scale(1.04); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tenup i { transition: none; transform: none; }
+}
+
+/* ---- Linguagem do folheto Holter Solution ----------------------------------
+   Elementos emprestados do material oficial: o selo da Cardioline no alto de
+   cada página, a faixa navy de seção com o V laranja, a pílula de contorno
+   laranja para a frase de arremate, o marcador de check e os cartões com foto
+   no topo. */
+
+
+/* Pílula de arremate. */
+.pilula {
+  border: 1px solid var(--cl-orange);
+  border-radius: 12px;
+  background: var(--cl-white);
+  padding: 20px 28px;
+  color: var(--cl-orange-ink);
+  font-size: 25px;
+  line-height: 1.35;
+  font-weight: 500;
+  max-width: none;
+}
+
+/* Marcador de check no lugar do quadradinho. */
+.list li::before {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--cl-orange);
+  background: none;
+  top: 6px;
+}
+.list li::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 13px;
+  width: 9px;
+  height: 5px;
+  border-left: 1.7px solid var(--cl-orange);
+  border-bottom: 1.7px solid var(--cl-orange);
+  transform: rotate(-45deg);
+}
+
+/* Cartão com foto no topo, como os três benefícios do folheto. */
+.cartao {
+  border: 1px solid var(--cl-line);
+  border-radius: 14px;
+  padding: 14px 14px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cl-space-2);
+  background: var(--cl-white);
+}
+.cartao .foto {
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+}
+.cartao .foto img { width: 100%; height: 100%; object-fit: cover; }
+.cartao h3 {
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.cartao p { font-size: 18px; line-height: 1.45; color: var(--cl-mute); padding: 0 8px; }
+
+/* Lockup do MindBeat na capa. */
+.lockup { display: flex; align-items: center; gap: 26px; }
+.lockup .disco { width: 104px; height: 104px; }
+.lockup .nome { width: 400px; height: auto; }
+
+/* Formas angulares laranja na borda da capa. */
+/* Acento angular, não bloco: estreito e recuado para não disputar com o
+   lockup nem cobrir o trilho de navegação. */
+.formas { position: absolute; right: 0; top: 0; height: 100%; width: 190px; z-index: 1; opacity: 0.82; }
+
+/* Barra de rodapé do encerramento. */
+/* Ancorada no rodapé da stage em vez de sangrar por margem negativa: no
+   WebKit a margem negativa no último item do flex empurrava a barra para fora
+   do slide, que tem overflow escondido, e ela sumia. */
+.barra-site {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 22px var(--cl-gutter);
+  background: rgb(255 255 255 / 0.06);
+  border-top: 1px solid rgb(255 255 255 / 0.14);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+/* ---- Chrome -------------------------------------------------------------- */
+
+.chrome {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 400ms var(--cl-ease);
+}
+.chrome.idle { opacity: 0; }
+.chrome[data-theme="white"], .chrome[data-theme="paper"] { color: var(--cl-ink); }
+.chrome[data-theme="ink"] { color: var(--cl-white); }
+
+.rail {
+  position: absolute;
+  top: 50%;
+  right: 28px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  pointer-events: auto;
+}
+.rail button {
+  width: 14px; height: 2px;
+  border: 0; padding: 0;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.22;
+  cursor: pointer;
+  transition: opacity 240ms var(--cl-ease), width 240ms var(--cl-ease), background 240ms var(--cl-ease);
+}
+.rail button.on { width: 26px; opacity: 1; background: var(--cl-orange); }
+
+.counter {
+  position: absolute;
+  right: 28px; bottom: 22px;
+  font-size: var(--cl-fs-caption);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: 0.45;
+  font-variant-numeric: tabular-nums;
+}
+.hint {
+  position: absolute;
+  left: 28px; bottom: 22px;
+  font-size: var(--cl-fs-caption);
+  letter-spacing: 0.04em;
+  opacity: 0.35;
+  transition: opacity 400ms var(--cl-ease);
+}
+/* A dica ensina a navegar e depois sai de cena: repeti-la em todo slide é
+   ruído no meio da conversa comercial. */
+.hint.off { opacity: 0; }
+
+/* ---- Impressão (exportar PDF em 1600x900) -------------------------------- */
+
+@page { size: 1600px 900px; margin: 0; }
+@media print {
+  .chrome { display: none; }
+  .deck { height: auto; overflow: visible; scroll-snap-type: none; }
+  .slide { height: var(--stage-h); page-break-after: always; break-after: page; }
+  .stage { transform: none; }
+  .slide[data-theme="ink"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: var(--cl-white); }
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- 01 · Capa -->
+  <section class="slide" data-theme="ink">
+    <div class="stage">
+      <img class="bleed" src="assets/img/v3-hero.png" alt="" />
+      <div class="scrim"></div>
+      <svg class="formas" viewBox="0 0 300 900" preserveAspectRatio="none" aria-hidden="true">
+        <polygon points="300,150 300,352 96,442 168,214" fill="#f66201" opacity="0.92" />
+        <polygon points="300,404 300,566 150,632 208,452" fill="#ca5001" opacity="0.55" />
+      </svg>
+      <img class="selo-cardios" src="assets/brand/cardios-white.png" alt="Cardios" />
+      <div class="pad">
+      <img class="marca" src="assets/brand/logo-white.svg" alt="Cardioline" data-reveal />
+      <span class="kicker" data-reveal style="--d: 1; margin-top: 22px;">Cardioline &middot; CardioLife &middot; Cardios</span>
+      <div class="grow"></div>
+      <div class="lockup" data-reveal style="--d: 2">
+        <img class="disco" src="assets/brand/mindbeat-mark.png" alt="" />
+        <img class="nome" src="assets/brand/mindbeat-word.png" alt="MindBeat" />
+      </div>
+      <p class="signature" data-reveal style="--d: 3">powered by CardioLife</p>
+      <p class="lede" data-reveal style="--d: 4; margin-top: 32px; max-width: 40ch;">
+        IA aplicada ao Holter: mais produtividade, menos risco, retorno rápido.
+      </p>
+      <div class="grow"></div>
+      <div class="rule" data-reveal style="--d: 5"></div>
+      <p class="caption" data-reveal style="--d: 6; margin-top: 24px; font-size: 20px;">
+        Apresentado para
+        <span class="editable plain accent" contenteditable="true" spellcheck="false">Central de Telemedicina</span>
+      </p>
+    </div></div>
+  </section>
+
+  <!-- 02 · O desafio -->
+  <section class="slide" data-theme="white">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios.png" alt="Cardios, a Cardioline company" /><div class="pad">
+      <span class="kicker" data-reveal>O desafio operacional hoje</span>
+      <h2 class="display subhead" data-reveal style="--d: 1; margin-top: 24px; max-width: 22ch;">
+        O gargalo migrou da aquisição para a <span class="accent">interpretação</span>
+      </h2>
+
+      <div class="cols cols-bias" style="margin-top: 48px;">
+        <ul class="list">
+          <li data-reveal style="--d: 2">Um único Holter de 24h gera cerca de <strong>100 mil batimentos</strong> para triagem. Um exame de 14 dias, <strong>1,4 milhão</strong>.</li>
+          <li data-reveal style="--d: 3">Hoje um técnico faz a limpeza e a pré-triagem antes do laudo médico. Isso tem custo, e depende de quem está de plantão.</li>
+          <li data-reveal style="--d: 4">O resultado é variabilidade entre técnicos, risco de erro manual e um custo operacional que costuma ficar invisível na planilha.</li>
+        </ul>
+
+        <figure data-reveal style="--d: 2">
+          <svg class="chart" viewBox="0 0 620 340" role="img"
+               aria-label="O custo de pré-triagem manual acelera à medida que o volume de exames cresce, enquanto o custo de software permanece estável">
+            <defs>
+              <linearGradient id="sob-a-curva" x1="0" y1="0" x2="0" y2="1">
+                <stop class="stop-a" offset="0" />
+                <stop class="stop-b" offset="1" />
+              </linearGradient>
+            </defs>
+
+            <path class="area" d="M78 288 C 268 286, 418 250, 588 44 L588 288 Z" fill="url(#sob-a-curva)" />
+            <path class="curve curve-main" pathLength="1" d="M78 288 C 268 286, 418 250, 588 44" />
+            <path class="flat" d="M78 166 L588 166" />
+
+            <g class="ponto">
+              <circle class="halo" cx="588" cy="44" r="15" />
+              <circle class="dot" cx="588" cy="44" r="6" />
+            </g>
+
+            <line class="axis" x1="78" y1="24" x2="78" y2="288" />
+            <line class="axis" x1="78" y1="288" x2="600" y2="288" />
+
+            <g class="legenda">
+              <line class="curve" x1="100" y1="52" x2="132" y2="52" />
+              <text class="lbl" x="146" y="58">pré-triagem manual</text>
+              <line class="flat" x1="100" y1="90" x2="132" y2="90" style="opacity: 1" />
+              <text class="lbl-mute" x="146" y="96">software, custo estável na escala</text>
+            </g>
+
+            <text class="cap" x="78" y="322">volume de exames</text>
+            <text class="cap" x="-160" y="18" transform="rotate(-90)">custo</text>
+          </svg>
+          <figcaption class="caption" style="margin-top: 20px;">Representação conceitual. As curvas ilustram o comportamento do custo, não uma medição.</figcaption>
+        </figure>
+      </div>
+
+      <div class="grow"></div>
+      <p class="pilula" data-reveal style="--d: 7">
+        À medida que o volume cresce, esse custo cresce junto. Sem ganho de escala, ele acelera em vez de diluir.
+      </p>
+    </div></div>
+  </section>
+
+  <!-- 03 · O que é o MindBeat -->
+  <section class="slide" data-theme="white">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios.png" alt="Cardios, a Cardioline company" /><div class="pad tight">
+      <span class="kicker" data-reveal>O que é o MindBeat</span>
+      <h2 class="display subhead" data-reveal style="--d: 1; margin-top: 20px; max-width: 34ch;">
+        Assistente de IA para leitura de Holter, transparente e não caixa-preta
+      </h2>
+
+      <div class="pipeline" style="margin-top: 40px;">
+        <div class="step" data-reveal style="--d: 2"><span class="n">01</span><span class="t">Aquisição</span></div>
+        <span class="arrow" data-reveal style="--d: 2"></span>
+        <div class="step" data-reveal style="--d: 3"><span class="n">02</span><span class="t">Preparo do sinal</span></div>
+        <span class="arrow" data-reveal style="--d: 3"></span>
+        <div class="step" data-reveal style="--d: 4"><span class="n">03</span><span class="t">Classificação de batimento</span></div>
+        <span class="arrow" data-reveal style="--d: 4"></span>
+        <div class="step" data-reveal style="--d: 5"><span class="n">04</span><span class="t">Ritmo</span></div>
+        <span class="arrow" data-reveal style="--d: 5"></span>
+        <div class="step" data-reveal style="--d: 6"><span class="n">05</span><span class="t">Relatório priorizado</span></div>
+      </div>
+
+      <div class="cols cols-bias" style="margin-top: 40px;">
+        <div class="stack gap-3">
+          <ul class="list">
+            <li data-reveal style="--d: 7">Todas as ferramentas de limpeza e de laudo manual continuam disponíveis. O médico revisa, ajusta e decide em cada etapa.</li>
+            <li data-reveal style="--d: 8">100% online: roda na nuvem, sem instalação local e sem servidor dedicado.</li>
+          </ul>
+          <div class="rule orange" data-reveal style="--d: 9; width: 80px; margin-top: 8px;"></div>
+          <p class="quote" data-reveal style="--d: 10; font-size: 26px;">
+            Laudo automático quando é seguro. Manual sempre que o médico decidir.
+          </p>
+        </div>
+
+        <div class="photo-card" data-reveal style="--d: 7">
+          <img src="assets/img/autopilot.png" alt="" />
+          <div class="copy">
+            <h3>Como o Autopilot da Tesla</h3>
+            <p>Dirige sozinho quando faz sentido, e o volante está sempre lá. Você assume o controle quando quiser.</p>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 04 · 60% dos exames -->
+  <section class="slide" data-theme="ink">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios-white.png" alt="Cardios, a Cardioline company" /><div class="pad center">
+      <span class="kicker" data-reveal>O ponto que muda a conta no Brasil</span>
+      <div class="cols cols-bias" style="margin-top: 40px; align-items: center;">
+        <div class="stack gap-4">
+          <h2 class="display big" data-reveal style="--d: 1">
+            <span class="accent"><span id="conta-dez">6</span> em cada 10</span> exames são 100% normais
+          </h2>
+          <div class="tenup" id="dez" data-reveal style="--d: 2">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            <i class="on"></i><i></i><i></i><i></i><i></i>
+          </div>
+        </div>
+
+        <div class="stack gap-4">
+          <p class="body" data-reveal style="--d: 4; font-size: 26px; line-height: 1.4;">
+            Nesses casos o MindBeat lauda automaticamente, sem pré-triagem manual e sem intervenção do técnico.
+          </p>
+          <p class="body mute" data-reveal style="--d: 5; font-size: 26px; line-height: 1.4;">
+            O cardiologista dedica seu tempo aos cerca de 40% de exames que realmente pedem atenção clínica.
+          </p>
+          <div class="rule orange" data-reveal style="--d: 6; width: 80px; margin-top: 8px;"></div>
+          <p class="quote" data-reveal style="--d: 7; font-size: 28px;">
+            Não é IA que ajuda em todo exame. É IA que resolve sozinha a maior parte do volume.
+          </p>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 05 · Priorização da fila -->
+  <section class="slide" data-theme="paper">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios.png" alt="Cardios, a Cardioline company" /><div class="pad tight">
+      <span class="kicker" data-reveal>Priorização inteligente da fila</span>
+      <h2 class="display subhead" data-reveal style="--d: 1; margin-top: 20px; max-width: 24ch;">
+        A IA não só analisa. Ela <span class="accent">resume e prioriza</span>.
+      </h2>
+
+      <div class="cols cols-2" style="margin-top: 36px; gap: 48px; align-items: start;">
+        <div class="stack gap-2" data-reveal style="--d: 2">
+          <span class="caption" style="letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;">Antes · ordem de chegada</span>
+          <div class="queue">
+            <div class="row"><span class="sev"></span><span>Exame 1042 · normal</span><span class="tag">08:12</span></div>
+            <div class="row"><span class="sev"></span><span>Exame 1043 · normal</span><span class="tag">08:31</span></div>
+            <div class="row"><span class="sev high"></span><span>Exame 1044 · pausa &gt; 3s</span><span class="tag">09:05</span></div>
+            <div class="row"><span class="sev"></span><span>Exame 1045 · normal</span><span class="tag">09:40</span></div>
+            <div class="row"><span class="sev mid"></span><span>Exame 1046 · TVNS</span><span class="tag">10:02</span></div>
+            <div class="row"><span class="sev"></span><span>Exame 1047 · normal</span><span class="tag">10:18</span></div>
+          </div>
+        </div>
+
+        <div class="stack gap-2 queue-topo" id="fila-topo" data-reveal style="--d: 3">
+          <span class="caption estado" style="letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;">
+            <span class="analisando" style="color: var(--cl-orange-ink);"><i class="bolinha"></i>MindBeat analisando</span>
+            <span class="pronto" style="color: var(--cl-orange-ink);">Depois · ordem de urgência clínica</span>
+          </span>
+          <div class="queue fila" id="fila-ia">
+            <div class="row" style="--i: 0; --de: 0; --para: 2"><span class="sev"></span><span>Exame 1042 · normal</span><span class="tag">auto</span></div>
+            <div class="row" style="--i: 1; --de: 1; --para: 3"><span class="sev"></span><span>Exame 1043 · normal</span><span class="tag">auto</span></div>
+            <div class="row urgente" style="--i: 2; --de: 2; --para: 0"><span class="sev high"></span><span>Exame 1044 · pausa &gt; 3s</span><span class="tag">revisar já</span></div>
+            <div class="row" style="--i: 3; --de: 3; --para: 4"><span class="sev"></span><span>Exame 1045 · normal</span><span class="tag">auto</span></div>
+            <div class="row atencao" style="--i: 4; --de: 4; --para: 1"><span class="sev mid"></span><span>Exame 1046 · TVNS</span><span class="tag">revisar</span></div>
+            <div class="row" style="--i: 5; --de: 5; --para: 5"><span class="sev"></span><span>Exame 1047 · normal</span><span class="tag">auto</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grow"></div>
+      <p class="caption">Fila ilustrativa. Todos os exames mostrados são sintéticos.</p>
+      <p class="pilula" style="margin-top: 18px;">
+        De laudar em ordem para laudar o que é mais urgente primeiro.
+      </p>
+    </div></div>
+  </section>
+
+  <!-- 06 · Evidência -->
+  <section class="slide" data-theme="ink">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios-white.png" alt="Cardios, a Cardioline company" /><div class="pad">
+      <span class="kicker" data-reveal>Evidência que sustenta a decisão</span>
+      <h2 class="display subhead" data-reveal style="--d: 1; margin-top: 20px; max-width: 30ch;">
+        Resultados validados em estudos publicados. E a tecnologia só evoluiu desde então.
+      </h2>
+
+      <div class="cols cols-3" style="margin-top: 56px;">
+        <div class="stack gap-2" data-reveal style="--d: 3">
+          <div class="rule orange" style="width: 60px;"></div>
+          <span class="bignum accent" data-conta="26.6" data-dec="1" data-pre="&minus;" data-pos="%" data-atraso="600" style="margin-top: 12px;">&minus;26,6%</span>
+          <p class="body" style="font-size: 21px; margin-top: 8px;">no tempo de análise por exame</p>
+          <p class="caption">Estudo de 2022. Número conservador frente ao estado da arte atual.</p>
+        </div>
+        <div class="stack gap-2" data-reveal style="--d: 26">
+          <div class="rule orange" style="width: 60px;"></div>
+          <span class="bignum accent" data-conta="14.1" data-dec="1" data-pos="&times;" data-atraso="3600" style="margin-top: 12px;">14,1&times;</span>
+          <p class="body" style="font-size: 21px; margin-top: 8px;">menos eventos críticos perdidos</p>
+          <p class="caption">Comparado à leitura convencional.</p>
+        </div>
+        <div class="stack gap-2" data-reveal style="--d: 49">
+          <div class="rule orange" style="width: 60px;"></div>
+          <span class="bignum accent" data-conta="0.97" data-dec="2" data-atraso="6600" style="margin-top: 12px;">0,97</span>
+          <p class="body" style="font-size: 21px; margin-top: 8px;">de acurácia (AUROC)</p>
+          <p class="caption">Validação independente com mais de 90 mil Holters.</p>
+        </div>
+      </div>
+
+      <div class="grow"></div>
+      <p class="quote" data-reveal style="--d: 56; font-size: 28px;">
+        Esses resultados foram publicados há mais de dois anos. Em IA, isso é uma vida: a geração atual do MindBeat tende a superar esses números.
+      </p>
+      <p class="caption" data-reveal style="--d: 58; margin-top: 28px;">Estudos publicados em periódicos revisados por pares. Referências completas disponíveis sob solicitação.</p>
+    </div></div>
+  </section>
+
+  <!-- 07 · Impacto na central -->
+  <section class="slide" data-theme="white">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios.png" alt="Cardios, a Cardioline company" /><div class="pad">
+      <span class="kicker" data-reveal>Impacto direto na central</span>
+      <h2 class="display subhead" data-reveal style="--d: 1; margin-top: 20px; max-width: 24ch;">
+        O que muda no dia a dia da operação
+      </h2>
+
+      <div class="cols cols-3 fill" style="margin-top: 48px; gap: var(--cl-space-3);">
+        <div class="card" data-reveal style="--d: 2">
+          <div class="top-rule"></div>
+          <h3>60% do volume laudado automaticamente</h3>
+          <p>Zero técnico, zero pré-triagem.</p>
+        </div>
+        <div class="card" data-reveal style="--d: 4">
+          <div class="top-rule"></div>
+          <h3>Fila priorizada por urgência</h3>
+          <p>Não por ordem de chegada.</p>
+        </div>
+        <div class="card" data-reveal style="--d: 6">
+          <div class="top-rule"></div>
+          <h3>Time médico no que importa</h3>
+          <p>Os 40% que exigem julgamento clínico.</p>
+        </div>
+      </div>
+
+      <div class="cols cols-2 fill" style="margin-top: var(--cl-space-3); gap: var(--cl-space-3);">
+        <div class="card" data-reveal style="--d: 8">
+          <div class="top-rule"></div>
+          <h3>Menos erro, mais consistência</h3>
+          <p>Nos exames que ainda passam por triagem.</p>
+        </div>
+        <div class="card" data-reveal style="--d: 10">
+          <div class="top-rule"></div>
+          <h3>100% online</h3>
+          <p>Acesso de qualquer lugar, sem infraestrutura local.</p>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 08 · Segurança clínica -->
+  <section class="slide" data-theme="white">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios.png" alt="Cardios, a Cardioline company" /><div class="pad">
+      <span class="kicker" data-reveal>Segurança clínica e governança</span>
+      <h2 class="display headline" data-reveal style="--d: 1; margin-top: 24px; max-width: 20ch;">
+        A decisão clínica continua sendo <span class="accent">humana</span>
+      </h2>
+
+      <div class="grow"></div>
+
+      <div class="cols cols-3">
+        <div class="stack gap-2" data-reveal style="--d: 2">
+          <div class="rule"></div>
+          <span class="caption" style="margin-top: 16px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;">Papéis</span>
+          <p class="body" style="margin-top: 8px;">A IA rastreia, resume e prioriza. O cardiologista confirma e contextualiza.</p>
+        </div>
+        <div class="stack gap-2" data-reveal style="--d: 5">
+          <div class="rule"></div>
+          <span class="caption" style="margin-top: 16px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;">Rastreabilidade</span>
+          <p class="body" style="margin-top: 8px;">Trilha auditável em cada etapa do processo.</p>
+        </div>
+        <div class="stack gap-2" data-reveal style="--d: 8">
+          <div class="rule"></div>
+          <span class="caption" style="margin-top: 16px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;">Colaboração</span>
+          <p class="body" style="margin-top: 8px;">Modelo de colaboração e não de substituição: sensibilidade da máquina somada ao julgamento clínico.</p>
+        </div>
+      </div>
+
+      <div class="grow"></div>
+      <div class="photo-band" data-reveal style="--d: 12">
+        <img src="assets/img/humano.png" alt="" />
+        <p class="quote" style="font-size: 28px;">
+          O volante nunca sai da mão do médico: as mesmas ferramentas manuais de sempre continuam disponíveis, a qualquer momento.
+        </p>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 09 · Investimento e retorno -->
+  <section class="slide" data-theme="paper">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios.png" alt="Cardios, a Cardioline company" /><div class="pad tight">
+      <span class="kicker" data-reveal>Modelo de investimento e retorno</span>
+      <h2 class="display subhead" data-reveal style="--d: 1; margin-top: 20px; max-width: 24ch;">
+        Retorno rápido, sem grande investimento inicial
+      </h2>
+
+      <div class="cols cols-bias-r" style="margin-top: 40px; gap: 56px;">
+        <ul class="list">
+          <li data-reveal style="--d: 2">Custo atual estimado: cerca de <strong>R$ 15 por análise</strong>, mais o custo indireto de erro e inconsistência.</li>
+          <li data-reveal style="--d: 3">Com 60% de redução no tempo por análise, esse custo cai na mesma proporção.</li>
+          <li data-reveal style="--d: 4">MindBeat é usage-based: sem capex relevante.</li>
+          <li data-reveal style="--d: 5">As horas liberadas voltam para o que exige médico: revisar os casos difíceis e procurar sinais que a triagem manual costuma deixar passar, onde a IA tem mais sensibilidade.</li>
+        </ul>
+
+        <div class="calc" data-reveal style="--d: 6">
+          <span class="caption" style="letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--cl-orange-ink);">Preencher com os dados da central</span>
+          <div class="field">
+            <label for="vol">Exames por mês</label>
+            <input id="vol" type="number" min="0" step="50" value="1000" />
+          </div>
+          <input class="slider" id="vol-r" type="range" min="0" max="20000" step="50" value="1000" aria-label="Exames por mês" />
+          <div class="field">
+            <label for="custo">Custo de Análise por exame (R$)</label>
+            <input id="custo" type="number" min="0" step="0.5" value="15" />
+          </div>
+          <input class="slider" id="custo-r" type="range" min="0" max="40" step="0.5" value="15" aria-label="Custo de Análise por exame (R$)" />
+          <div class="field">
+            <label for="auto">Redução de tempo por análise (%)</label>
+            <input id="auto" type="number" min="0" max="100" step="5" value="60" />
+          </div>
+          <input class="slider" id="auto-r" type="range" min="0" max="100" step="5" value="60" aria-label="Redução de tempo por análise (%)" />
+          <div class="field">
+            <label for="tempo">Tempo de análise (min)</label>
+            <input id="tempo" type="number" min="0" step="1" value="20" />
+          </div>
+          <input class="slider" id="tempo-r" type="range" min="0" max="60" step="1" value="20" aria-label="Tempo de análise (min)" />
+          <div class="rule"></div>
+          <div class="out">
+            <div><span class="k">Economia por mês</span><span class="v" id="mes">R$ 9.000</span></div>
+            <div><span class="k">Economia por ano</span><span class="v" id="ano">R$ 108.000</span></div>
+            <div><span class="k">Horas liberadas por mês</span><span class="v" id="horas">200 h</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grow"></div>
+      <p class="caption" data-reveal style="--d: 8">Estimativa bruta calculada ao vivo com os dados informados pela central. As horas liberadas saem da redução de tempo por análise. Não inclui o custo indireto de erro e retrabalho, nem o preço do MindBeat.</p>
+    </div></div>
+  </section>
+
+  <!-- 10 · Por que agora -->
+  <section class="slide" data-theme="white">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios.png" alt="Cardios, a Cardioline company" /><div class="pad">
+      <span class="kicker" data-reveal>Por que agora</span>
+      <h2 class="display headline" data-reveal style="--d: 1; margin-top: 24px; max-width: 20ch;">
+        Agora temos <span class="accent">todos os ingredientes</span>
+      </h2>
+
+      <div class="grow"></div>
+
+      <div class="cols cols-3" style="gap: var(--cl-space-3);">
+        <div class="cartao" data-reveal style="--d: 2">
+          <div class="foto"><img src="assets/img/v3-rapido.png" alt="" /></div>
+          <h3>CardioLife</h3>
+          <p>O software e a engenharia de IA que fazem o MindBeat.</p>
+        </div>
+        <div class="cartao" data-reveal style="--d: 5">
+          <div class="foto"><img src="assets/img/v3-fluxo.png" alt="" /></div>
+          <h3>Cardioline</h3>
+          <p>A dimensão global e o know-how de quem faz cardiologia há décadas.</p>
+        </div>
+        <div class="cartao" data-reveal style="--d: 8">
+          <div class="foto"><img src="assets/img/v3-transparente.png" alt="" /></div>
+          <h3>Cardios</h3>
+          <p>A peça que faltava: suporte no Brasil e a base instalada de clientes.</p>
+        </div>
+      </div>
+
+      <div class="grow"></div>
+    </div></div>
+  </section>
+
+  <!-- 11 · Próximos passos -->
+  <section class="slide" data-theme="ink">
+    <div class="stage">
+      <img class="selo-cardios pg" src="assets/brand/cardios-white.png" alt="Cardios, a Cardioline company" />
+      <img class="bleed" src="assets/img/comeco.png" alt="" />
+      <div class="scrim up"></div>
+      <div class="pad">
+      <span class="kicker" data-reveal>Próximos passos</span>
+      <h2 class="display headline" data-reveal style="--d: 1; margin-top: 24px;">Como começar</h2>
+
+      <div class="grow"></div>
+
+      <div class="steps">
+        <div class="s" data-reveal style="--d: 2">
+          <span class="n">01</span>
+          <h3>Piloto com volume real</h3>
+          <p class="mute">Um recorte da fila da central, medido contra o processo atual.</p>
+        </div>
+        <div class="s" data-reveal style="--d: 4">
+          <span class="n">02</span>
+          <h3>Timeline de implementação</h3>
+          <p class="mute">Acesso, integração e treino do time, definidos em conjunto.</p>
+        </div>
+        <div class="s" data-reveal style="--d: 6">
+          <span class="n">03</span>
+          <h3>Condições comerciais</h3>
+          <p class="mute">Modelo usage-based calibrado pelo volume observado no piloto.</p>
+        </div>
+      </div>
+
+      <div class="grow"></div>
+      <div class="barra-site" data-reveal style="--d: 9">
+        <span class="kicker bare">MindBeat · powered by CardioLife · www.cardioline.com</span>
+        <span class="editable accent" contenteditable="true" spellcheck="false" style="font-size: 20px; min-width: 280px; text-align: right;">contato · data da próxima reunião</span>
+      </div>
+    </div></div>
+  </section>
+
+</div>
+
+<div class="chrome" id="chrome" data-theme="ink">
+  <nav class="rail" id="rail" aria-label="Navegação de slides"></nav>
+  <span class="hint" id="hint">&larr; &rarr; navegar · F tela cheia · R recomeçar</span>
+  <span class="counter" id="counter">01 / 11</span>
+</div>
+
+<script>
+(function () {
+  var deck = document.getElementById("deck");
+  var slides = Array.prototype.slice.call(deck.querySelectorAll(".slide"));
+  var total = slides.length;
+  var rail = document.getElementById("rail");
+  var counter = document.getElementById("counter");
+  var chrome = document.getElementById("chrome");
+  var hint = document.getElementById("hint");
+  var active = 1;
+
+  // ---- Escala da stage -------------------------------------------------------
+  // Sempre em JS, em todo browser. A versão em CSS puro com tan(atan2()) era
+  // mais elegante, mas no Safari o resultado vinha negativo e o slide aparecia
+  // espelhado. Uma divisão em JS não tem essa ambiguidade.
+  function escalar() {
+    var s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    if (!(s > 0) || !isFinite(s)) s = 1;
+    deck.style.setProperty("--stage-scale", String(s));
+  }
+  escalar();
+  window.addEventListener("resize", escalar);
+  window.addEventListener("orientationchange", escalar);
+
+  // ---- Trilho de progresso --------------------------------------------------
+  slides.forEach(function (_, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-label", "Slide " + (i + 1));
+    b.addEventListener("click", function () { goTo(i + 1); });
+    rail.appendChild(b);
+  });
+  var ticks = Array.prototype.slice.call(rail.children);
+
+// ---- Coreografia da fila do slide 5 ---------------------------------------
+  // Três fases por tempo: as linhas entram na ordem de chegada, a IA reordena,
+  // e só então os rótulos e a borda da urgente aparecem. Zera ao sair do slide
+  // para a passagem poder ser mostrada de novo.
+  var fila = document.getElementById("fila-ia");
+  var filaTopo = document.getElementById("fila-topo");
+  var filaSlide = fila ? slides.indexOf(fila.closest(".slide")) + 1 : -1;
+  var filaTimers = [];
+
+  function tocarFila(ligado) {
+    if (!fila) return;
+    filaTimers.forEach(clearTimeout);
+    filaTimers = [];
+    fila.classList.remove("f1", "f2", "f3");
+    filaTopo.classList.remove("f2");
+    if (!ligado) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      fila.classList.add("f1", "f2", "f3");
+      filaTopo.classList.add("f2");
+      return;
+    }
+    var marca = function (ms, fn) { filaTimers.push(setTimeout(fn, ms)); };
+    marca(280, function () { fila.classList.add("f1"); });
+    marca(2380, function () { fila.classList.add("f2"); filaTopo.classList.add("f2"); });
+    marca(3780, function () { fila.classList.add("f3"); });
+  }
+
+// ---- Contadores e acendimento dos quadrados --------------------------------
+  // Cada número sobe de zero até data-conta, com o atraso que data-atraso pede.
+  // O slide 4 amarra o contador aos dez quadrados: o k-ésimo acende quando a
+  // conta chega em k, para o número e o desenho contarem a mesma história.
+  var reduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var contaTimers = [];
+
+  function formataNum(v, dec) {
+    return v.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+
+  function subirAte(el) {
+    var alvo = parseFloat(el.getAttribute("data-conta"));
+    var dec = parseInt(el.getAttribute("data-dec") || "0", 10);
+    var pre = el.getAttribute("data-pre") || "";
+    var pos = el.getAttribute("data-pos") || "";
+    var dur = parseInt(el.getAttribute("data-dur") || "1700", 10);
+    var ini = performance.now();
+    function passo(agora) {
+      var t = Math.min(1, (agora - ini) / dur);
+      var v = alvo * (1 - Math.pow(1 - t, 3));
+      el.textContent = pre + formataNum(v, dec) + pos;
+      if (t < 1) requestAnimationFrame(passo);
+      else el.textContent = pre + formataNum(alvo, dec) + pos;
+    }
+    el.textContent = pre + formataNum(0, dec) + pos;
+    requestAnimationFrame(passo);
+  }
+
+  function escreverFinal(el) {
+    var alvo = parseFloat(el.getAttribute("data-conta"));
+    var dec = parseInt(el.getAttribute("data-dec") || "0", 10);
+    el.textContent = (el.getAttribute("data-pre") || "") + formataNum(alvo, dec) + (el.getAttribute("data-pos") || "");
+  }
+
+  var dez = document.getElementById("dez");
+  var contaDez = document.getElementById("conta-dez");
+  var dezQuadrados = dez ? Array.prototype.slice.call(dez.children) : [];
+
+  function tocarContadores(n) {
+    contaTimers.forEach(clearTimeout);
+    contaTimers = [];
+    var slide = slides[n - 1];
+    if (!slide) return;
+    var alvos = Array.prototype.slice.call(slide.querySelectorAll("[data-conta]"));
+    if (!alvos.length && !(dez && slide.contains(dez))) return;
+
+    if (reduzido.matches) {
+      alvos.forEach(escreverFinal);
+      dezQuadrados.forEach(function (q, i) { q.classList.toggle("on", i < 6); });
+      if (contaDez) contaDez.textContent = "6";
+      return;
+    }
+
+    if (dez && slide.contains(dez)) {
+      // O número e os quadrados são o mesmo relógio: o k-ésimo quadrado acende
+      // no instante em que a conta vira k. Um contador em easing próprio
+      // arredondaria para 6 antes do sexto quadrado acender.
+      dezQuadrados.forEach(function (q) { q.classList.remove("on"); });
+      if (contaDez) contaDez.textContent = "0";
+      for (var k = 1; k <= 6; k++) {
+        (function (k) {
+          contaTimers.push(setTimeout(function () {
+            dezQuadrados[k - 1].classList.add("on");
+            if (contaDez) contaDez.textContent = String(k);
+          }, 600 + k * 360));
+        })(k);
+      }
+    }
+
+    alvos.forEach(function (el) {
+      var atraso = parseInt(el.getAttribute("data-atraso") || "500", 10);
+      el.textContent = (el.getAttribute("data-pre") || "") + formataNum(0, parseInt(el.getAttribute("data-dec") || "0", 10)) + (el.getAttribute("data-pos") || "");
+      contaTimers.push(setTimeout(function () { subirAte(el); }, atraso));
+    });
+  }
+
+  function paint() {
+    ticks.forEach(function (t, i) { t.classList.toggle("on", i + 1 === active); });
+    counter.textContent = String(active).padStart(2, "0") + " / " + total;
+    chrome.setAttribute("data-theme", slides[active - 1].getAttribute("data-theme"));
+    hint.classList.toggle("off", active !== 1);
+    slides.forEach(function (el, i) { el.classList.toggle("on", i + 1 === active); });
+    tocarFila(active === filaSlide);
+    tocarContadores(active);
+  }
+
+  // ---- Navegação ------------------------------------------------------------
+  // Tween próprio em vez de scrollTo({behavior:"smooth"}): sob scroll-snap
+  // mandatório o Chrome cancela um smooth scroll re-alvejado, e teclas rápidas
+  // se perdem no meio da animação.
+  var anim = 0;
+  var target = 1;
+
+  function scrollToSlide(n) {
+    cancelAnimationFrame(anim);
+    var to = (n - 1) * deck.clientHeight;
+    var from = deck.scrollTop;
+    var distance = to - from;
+    if (Math.abs(distance) < 1) return;
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || Math.abs(distance) > deck.clientHeight * 1.5) {
+      deck.scrollTop = to;
+      return;
+    }
+    var started = performance.now();
+    var step = function (now) {
+      var t = Math.min(1, (now - started) / 420);
+      deck.scrollTop = from + distance * (1 - Math.pow(1 - t, 3));
+      if (t < 1) anim = requestAnimationFrame(step);
+    };
+    anim = requestAnimationFrame(step);
+  }
+
+  function goTo(n) {
+    var clamped = Math.min(total, Math.max(1, n));
+    target = clamped;
+    active = clamped;
+    paint();
+    scrollToSlide(clamped);
+    var hash = "#" + String(clamped).padStart(2, "0");
+    if (window.location.hash !== hash) window.history.replaceState(null, "", hash);
+  }
+
+  var frame = 0;
+  deck.addEventListener("scroll", function () {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(function () {
+      var n = Math.min(total, Math.max(1, Math.round(deck.scrollTop / deck.clientHeight) + 1));
+      if (n !== active) { active = n; target = n; paint(); }
+    });
+  }, { passive: true });
+
+  window.addEventListener("keydown", function (e) {
+    var el = e.target;
+    if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+    switch (e.key) {
+      case "ArrowRight": case "ArrowDown": case "PageDown": case " ":
+        e.preventDefault(); goTo(target + 1); break;
+      case "ArrowLeft": case "ArrowUp": case "PageUp":
+        e.preventDefault(); goTo(target - 1); break;
+      case "Home": e.preventDefault(); goTo(1); break;
+      case "End": e.preventDefault(); goTo(total); break;
+      case "f": case "F":
+        // Safari só expõe as versões com prefixo, e a dele não devolve promise.
+        e.preventDefault();
+        var raiz = document.documentElement;
+        var cheio = document.fullscreenElement || document.webkitFullscreenElement;
+        try {
+          if (cheio) {
+            (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          } else {
+            var pedir = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+            var r = pedir.call(raiz);
+            if (r && r.catch) r.catch(function () {});
+          }
+        } catch (erro) { /* sem tela cheia, segue apresentando */ }
+        break;
+      case "r": case "R":
+        e.preventDefault();
+        window.history.replaceState(null, "", window.location.pathname);
+        window.location.reload();
+        break;
+    }
+  });
+
+  // Chrome some depois de 2s parado.
+  var idleTimer;
+  function wake() {
+    chrome.classList.remove("idle");
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(function () { chrome.classList.add("idle"); }, 2000);
+  }
+  window.addEventListener("mousemove", wake);
+  window.addEventListener("keydown", wake);
+  wake();
+
+  // Deep link.
+  if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+  requestAnimationFrame(function () {
+    var n = Number(window.location.hash.replace("#", ""));
+    if (n >= 1 && n <= total) { active = n; target = n; deck.scrollTop = (n - 1) * deck.clientHeight; }
+    paint();
+  });
+
+  // ---- Calculadora de retorno (slide 09) ------------------------------------
+  var vol = document.getElementById("vol");
+  var custo = document.getElementById("custo");
+  var auto = document.getElementById("auto");
+  var tempo = document.getElementById("tempo");
+  var mes = document.getElementById("mes");
+  var horas = document.getElementById("horas");
+  var ano = document.getElementById("ano");
+  var brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  var num = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+
+  function recalc() {
+    var v = Math.max(0, Number(vol.value) || 0);
+    var c = Math.max(0, Number(custo.value) || 0);
+    var a = Math.min(100, Math.max(0, Number(auto.value) || 0)) / 100;
+    var t = Math.max(0, Number(tempo.value) || 0);
+    var m = v * c * a;
+    mes.textContent = brl.format(m);
+    ano.textContent = brl.format(m * 12);
+    // O tempo economizado é a mesma conta do dinheiro, medida em minutos: o
+    // volume que a IA lauda sozinha deixa de passar pela pré-triagem.
+    horas.textContent = num.format(Math.round((v * a * t) / 60)) + " h";
+  }
+
+  // O campo e o slider são duas entradas para o mesmo número: mexer em um
+  // escreve no outro antes de recalcular, para os dois nunca discordarem.
+  function ligarCampo(idNum, idSlider) {
+    var n = document.getElementById(idNum);
+    var r = document.getElementById(idSlider);
+    if (!n || !r) return;
+    function pintar() {
+      var min = Number(r.min), max = Number(r.max);
+      r.style.setProperty("--pct", String(((Number(r.value) - min) / (max - min)) * 100));
+    }
+    n.addEventListener("input", function () {
+      var v = Number(n.value);
+      if (!isNaN(v)) r.value = String(Math.min(Number(r.max), Math.max(Number(r.min), v)));
+      pintar();
+      recalc();
+    });
+    r.addEventListener("input", function () {
+      n.value = r.value;
+      pintar();
+      recalc();
+    });
+    pintar();
+  }
+
+  ligarCampo("vol", "vol-r");
+  ligarCampo("custo", "custo-r");
+  ligarCampo("auto", "auto-r");
+  ligarCampo("tempo", "tempo-r");
+  recalc();
+})();
+</script>
+</body>
+</html>

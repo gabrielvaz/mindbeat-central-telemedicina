@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>MindBeat · Central de Telemedicina · versão folheto</title>
 <style>
 /* ---------------------------------------------------------------------------
@@ -866,6 +866,181 @@ svg { display: block; }
    ruído no meio da conversa comercial. */
 .hint.off { opacity: 0; }
 
+/* ---- Mobile ----------------------------------------------------------------
+   Abaixo de 1000px a stage de 1600x900 é abandonada. Escalada para caber num
+   telefone ela daria texto de 5 a 10px: cabe, mas não se lê. Aqui o slide vira
+   um bloco de fluxo normal, que cresce com o conteúdo e rola.
+
+   Nada deste bloco vaza para o desktop: tudo vive dentro da media query, e a
+   única mudança fora dela é a navegação passar a medir offsetTop em vez de
+   supor que todo slide tem a altura da janela, o que no desktop dá no mesmo. */
+
+@media (max-width: 1000px) {
+  :root {
+    --cl-gutter: 20px;
+    --cl-fs-hero: 44px;
+    --cl-fs-display: 34px;
+    --cl-fs-headline: 30px;
+    --cl-fs-subhead: 26px;
+    --cl-fs-lede: 19px;
+    --cl-fs-body: 16px;
+    --cl-fs-caption: 13px;
+    --cl-fs-kicker: 12px;
+    --cl-space-4: 24px;
+    --cl-space-5: 32px;
+    --cl-space-6: 40px;
+  }
+
+  .deck {
+    height: 100vh;
+    height: 100svh;
+    scroll-snap-type: y proximity;
+  }
+
+  .slide {
+    position: relative;
+    height: auto;
+    min-height: 100svh;
+    overflow: hidden;
+    align-items: stretch;
+  }
+
+  /* A stage continua sendo o bloco de referência. Se ela virar static, as
+     imagens sangradas e o selo se ancoram na janela e vazam: todos os fundos
+     empilham no mesmo lugar e os onze selos caem no mesmo canto. */
+  .stage {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 100svh;
+    transform: none;
+    display: flex;
+  }
+
+  /* O pad sai do posicionamento absoluto para o conteúdo empurrar a altura,
+     mas segue relativo para continuar acima do fundo sangrado. */
+  .pad {
+    position: relative;
+    z-index: 1;
+    inset: auto;
+    width: 100%;
+    padding: 30px var(--cl-gutter) 44px;
+    gap: 16px;
+  }
+  .pad.tight { padding: 26px var(--cl-gutter) 40px; }
+
+  /* Os espaçadores elásticos existem para distribuir altura sobrando; no
+     fluxo vertical não há sobra, e eles só abririam buracos. */
+  .grow { flex: none; height: 0; }
+
+  /* Tudo que era coluna vira empilhado. */
+  .cols,
+  .cols-2,
+  .cols-3,
+  .cols-5,
+  .cols-bias,
+  .cols-bias-r,
+  .steps { grid-template-columns: 1fr; gap: var(--cl-space-4); }
+  .cols.fill { flex: none; }
+
+  .lede, .body, .quote, .list li { max-width: none; }
+  .quote { font-size: 21px; }
+  .bignum { font-size: 64px; }
+  .display { text-wrap: wrap; }
+
+  /* Marcas e selos. */
+  .marca { width: 150px; }
+  /* O selo mora no canto e o cabeçalho não pode correr por baixo dele: o
+     kicker perde a largura da marca mais um respiro, e quebra em duas linhas
+     quando precisa. */
+  .selo-cardios { width: 64px; top: 24px; right: var(--cl-gutter); }
+  .selo-cardios.pg { width: 52px; top: 24px; }
+  .pad > .kicker { max-width: calc(100% - 76px); }
+  .pad > .kicker .kickerText { white-space: normal; }
+  .lockup { gap: 14px; }
+  .lockup .disco { width: 54px; height: 54px; }
+  .lockup .nome { width: 200px; }
+  .signature { font-size: 19px; margin-top: 12px; }
+  .formas { display: none; }
+
+  /* Slide 3: o pipeline empilha e as setas somem, porque na vertical elas
+     apontariam para o lado errado. */
+  .pipeline { flex-direction: column; }
+  .pipeline .arrow { display: none; }
+  .pipeline .step { padding: 12px 14px; }
+  .pipeline .step .t { font-size: 17px; }
+
+  /* Slide 4. */
+  .tenup { grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tenup i { height: auto; aspect-ratio: 1; }
+
+  /* Slide 5: as filas continuam por slot, só mais compactas. */
+  .queue.fila { height: 302px; }
+  .queue.fila .row { height: 44px; transform: translateY(calc(var(--de) * 52px)); }
+  .queue.fila.f2 .row { transform: translateY(calc(var(--para) * 52px)); }
+  .queue .row { font-size: 14px; padding: 0 12px; height: 44px; }
+  .queue .row .tag { font-size: 11px; }
+
+  /* Slide 9. */
+  .calc { padding: 20px 18px; }
+  .calc .field { grid-template-columns: 1fr 96px; gap: 12px; }
+  .calc label { font-size: 15px; }
+  .calc input { font-size: 19px; padding: 6px 10px; }
+  .calc .out { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .calc .out .v { font-size: 26px; }
+  .calc .out .k { font-size: 12px; min-height: 0; }
+
+  /* Cartões com imagem. */
+  .photo-card { min-height: 200px; }
+  .photo-card .copy h3 { font-size: 22px; }
+  .photo-card .copy p { font-size: 16px; }
+  .photo-band { height: 200px; }
+  .photo-band .quote { padding: 0 20px; font-size: 18px; }
+  .cartao h3 { font-size: 20px; }
+  .cartao p { font-size: 15px; }
+  .card h3 { font-size: 20px; }
+  .card p { font-size: 15px; }
+  .steps .s h3 { font-size: 22px; }
+  .steps .s p { font-size: 15px; }
+
+  /* Encerramento: sem posição absoluta, a barra volta ao fluxo. */
+  .barra-site {
+    position: static;
+    margin: 0 calc(-1 * var(--cl-gutter));
+    padding: 18px var(--cl-gutter);
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .editable { min-width: 0; }
+
+  /* Chrome: o trilho de pontos não serve ao toque, e a dica fala de teclas. */
+  .rail, .hint { display: none; }
+  .counter { right: 14px; bottom: 12px; }
+}
+
+/* De 640 a 1000px, telefone deitado e tablet estreito, cabe uma segunda coluna.
+   Empilhar tudo aí desperdiça a largura e obriga a rolar o dobro. */
+@media (min-width: 640px) and (max-width: 1000px) {
+  .cols-2,
+  .cols-3,
+  .cols-5,
+  .cols-bias,
+  .cols-bias-r,
+  .steps { grid-template-columns: 1fr 1fr; }
+  .pipeline { flex-direction: row; flex-wrap: wrap; }
+  .pipeline .step { flex: 1 1 28%; }
+  .calc .out { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Deitado num telefone sobra pouca altura: encolhe o respiro vertical para o
+   título e o primeiro bloco caberem juntos na tela. */
+@media (max-width: 1000px) and (orientation: landscape) {
+  :root { --cl-fs-hero: 38px; --cl-fs-display: 30px; --cl-fs-headline: 26px; --cl-fs-subhead: 22px; }
+  .pad { padding: 22px var(--cl-gutter) 32px; gap: 12px; }
+  .cols { gap: var(--cl-space-3); }
+}
+
 /* ---- Impressão (exportar PDF em 1600x900) -------------------------------- */
 
 @page { size: 1600px 900px; margin: 0; }
@@ -1370,6 +1545,12 @@ svg { display: block; }
   window.addEventListener("resize", escalar);
   window.addEventListener("orientationchange", escalar);
 
+  // Girar o aparelho muda a altura de todo slide; sem reencostar o scroll, a
+  // apresentação reabre no meio de outro slide.
+  window.addEventListener("orientationchange", function () {
+    setTimeout(function () { deck.scrollTop = slides[active - 1].offsetTop; }, 250);
+  });
+
   // ---- Trilho de progresso --------------------------------------------------
   slides.forEach(function (_, i) {
     var b = document.createElement("button");
@@ -1503,7 +1684,10 @@ svg { display: block; }
 
   function scrollToSlide(n) {
     cancelAnimationFrame(anim);
-    var to = (n - 1) * deck.clientHeight;
+    // offsetTop em vez de (n-1) * altura da janela: no desktop dá no mesmo,
+    // porque cada slide tem exatamente uma tela, e no mobile os slides têm
+    // alturas diferentes e a conta antiga levaria para o lugar errado.
+    var to = slides[n - 1].offsetTop;
     var from = deck.scrollTop;
     var distance = to - from;
     if (Math.abs(distance) < 1) return;
@@ -1531,11 +1715,22 @@ svg { display: block; }
     if (window.location.hash !== hash) window.history.replaceState(null, "", hash);
   }
 
+  // O slide ativo é aquele que cobre o meio da janela. Vale para alturas iguais
+  // e para alturas diferentes, então serve aos dois modos.
+  function slideNoMeio() {
+    var meio = deck.scrollTop + deck.clientHeight / 2;
+    for (var i = 0; i < total; i++) {
+      var el = slides[i];
+      if (meio >= el.offsetTop && meio < el.offsetTop + el.offsetHeight) return i + 1;
+    }
+    return deck.scrollTop <= 0 ? 1 : total;
+  }
+
   var frame = 0;
   deck.addEventListener("scroll", function () {
     cancelAnimationFrame(frame);
     frame = requestAnimationFrame(function () {
-      var n = Math.min(total, Math.max(1, Math.round(deck.scrollTop / deck.clientHeight) + 1));
+      var n = slideNoMeio();
       if (n !== active) { active = n; target = n; paint(); }
     });
   }, { passive: true });
@@ -1588,7 +1783,7 @@ svg { display: block; }
   if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
   requestAnimationFrame(function () {
     var n = Number(window.location.hash.replace("#", ""));
-    if (n >= 1 && n <= total) { active = n; target = n; deck.scrollTop = (n - 1) * deck.clientHeight; }
+    if (n >= 1 && n <= total) { active = n; target = n; deck.scrollTop = slides[n - 1].offsetTop; }
     paint();
   });
 
